@@ -1,0 +1,101 @@
+/* Add this CSS to your App.css or create a separate CSS file and import it */
+
+/* Style for the main container 
+.App {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: Arial, sans-serif;
+    padding: 20px;
+  }
+  */
+/*
+  p {
+    margin: 3px;
+  }
+  */
+/* Style for categories and subcategories */
+
+.Category {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin: 10px 0;
+  width: 400px;
+}
+
+/* Style for category titles */
+.CategoryTitle {
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #007bff;
+}
+
+/* Style for category labels */
+.Category label {
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+/* Style for subcategories */
+.Subcategory {
+  border: 1px dashed #ccc;
+  padding: 10px;
+  margin: 5px 0;
+  width: 380px;
+  margin-left: 20px;
+}
+
+/* Style for subcategory titles */
+.SubcategoryTitle {
+  font-weight: bold;
+  color: #009688;
+}
+
+/* Style for categoryId */
+.sliding-text-container {
+  overflow: hidden;
+
+}
+
+.sliding-text {
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  position: relative;
+  animation: scrollAnimation1 linear 1 forwards, scrollAnimation2 linear infinite;
+  animation-duration: 2.5s, 5s;
+  animation-delay: 0s, 2.5s;
+}
+
+@keyframes scrollAnimation1 {
+  0% {
+    transform: translateX(0%);
+  }
+
+  100% {
+    transform: translateX(-110%);
+  }
+}
+@keyframes scrollAnimation2 {
+  0% {
+    transform: translateX(110%);
+  }
+  
+  100% {
+    transform: translateX(-110%);
+  }
+}
+/* Style for buttons 
+  button {
+    margin-top: 10px;
+    cursor: pointer;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+  }
+  
+  button:hover {
+    background-color: #0056b3;
+  }*/

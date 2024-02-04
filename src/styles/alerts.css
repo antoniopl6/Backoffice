@@ -1,0 +1,53 @@
+.alert-container {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: slideIn 0.5s ease-in-out;
+
+  z-index: 9999;
+  /* Adjust the z-index as needed */
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.shake {
+  animation: shake 0.5s;
+}
+
+@keyframes shake {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25%,
+  75% {
+    transform: translateX(-5px);
+  }
+
+  50% {
+    transform: translateX(5px);
+  }
+}
+
+.alert-container.error {
+  background-color: #f44336;
+  /* Adjust the color as needed */
+}
+
+.alert-container.success {
+  background-color: #4caf50;
+  /* Adjust the color as needed */
+}

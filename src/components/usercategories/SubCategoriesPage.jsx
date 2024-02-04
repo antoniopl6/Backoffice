@@ -1,0 +1,291 @@
+import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+
+//import SubAIForm from './SubCategoriesPage';
+import {
+  Box,
+  Button,
+  Flex,
+  Icon,
+  Select,
+  SimpleGrid,
+  Text,
+  useColorModeValue,
+} from '@chakra-ui/react';
+import Card from '@/components/card/Card';
+import CategoriesCard from '@/components/card/CategoriesCard';
+import { SearchBar } from '@/components/search';
+import { BiAddToQueue } from "react-icons/bi";
+import ComponentForm from '@/components/menu/ComponentForm';
+import { v4 as uuidv4 } from 'uuid';
+
+const searchCategories = (categories, searchQuery) => {
+  let result = [];
+  if (searchQuery != "") {
+    categories.forEach(category => {
+      const includesInCategory =
+        category.CategoryId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        category.CategoryContent.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        category.CategorySummary.toLowerCase().includes(searchQuery.toLowerCase());
+
+      if (includesInCategory) {
+        result.push(category);
+      }
+
+      if (category.subcategories && category.subcategories.length > 0) {
+        const matchingSubcategories = searchCategories(category.subcategories, searchQuery);
+        result = result.concat(matchingSubcategories);
+      }
+    });
+  }
+  return result;
+};
+
+const getCategoryByIndexes = (structure, indexes) => {
+  let currentLevel = structure;
+  for (let i = 0; i < indexes.length; i++) {
+    const index = indexes[i];
+    if (currentLevel && currentLevel[index] && currentLevel[index].subcategories) {
+      currentLevel = (i == indexes.length - 1) ? currentLevel[index] : currentLevel[index].subcategories;
+    } else {
+      console.error('Invalid indexes or structure.');
+      return null;
+    }
+  }
+  return currentLevel;
+};
+
+const SubCategoriesPage = ({ categories, path, onChange, onSubmit }) => {
+  const [category, setCategory] = useState(path.length > 0 ? getCategoryByIndexes(categories, path) : null);
+  const [categoriesOfPath, setCategoriesOfPath] = useState(category != null ? category.subcategories : categories);
+  const textColor = useColorModeValue('navy.700', 'white');
+  const buttonBg = useColorModeValue('transparent', 'navy.800');
+  const borderColor = useColorModeValue('gray.200', 'whiteAlpha.100');
+  const hoverButton = useColorModeValue({ bg: 'gray.100' }, { bg: 'whiteAlpha.100' });
+  const activeButton = useColorModeValue({ bg: 'gray.200' }, { bg: 'whiteAlpha.100' });
+  const [activeCategory, setActiveCategory] = useState(null);
+  const [isComponentFormOpen, setIsComponentFormOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const filteredCategories = searchCategories(categories, searchQuery);
+  const router = useRouter();
+  const isOnSearch = searchQuery.length > 0;
+  const handleAddCategory = () => {
+    const key = uuidv4();
+    const newCategory = {
+      key: key,
+      CategoryId: '',
+      AnswerType: 'GenericInfo',
+      CategoryContent: '',
+      CategorySummary: '',
+      subcategories: [],
+    };
+    const updatedSubCat = [...categoriesOfPath, newCategory];
+    const updatedCategories = modifyCategories(categories, path, updatedSubCat);
+    onChange(updatedCategories);
+    setCategoriesOfPath(updatedSubCat);
+    setActiveCategory(newCategory);
+    setIsComponentFormOpen(true);
+  };
+
+  const removeCategoryWithKey = (currentCategory, targetKey) => {
+    if (currentCategory.key === targetKey) {
+      return null;
+    }
+    if (+currentCategory.subcategories.length > 0) {
+      const updatedSubcategories = currentCategory.subcategories
+        .map((subcategory) => removeCategoryWithKey(subcategory, targetKey))
+        .filter(Boolean);
+      return {
+        ...currentCategory,
+        subcategories: updatedSubcategories,
+      };
+    }
+    return currentCategory;
+  };
+
+  const handleRemoveCategory = (categoryKey) => {
+    const updatedCategories = categories
+      .map((category) => removeCategoryWithKey(category, categoryKey))
+      .filter(Boolean);
+    onChange(updatedCategories);
+    setIsComponentFormOpen(false);
+  };
+
+  const updateCategoryWithKey = (currentCategory, editedCategory) => {
+    if (currentCategory.key === editedCategory.key) {
+      return {
+        ...editedCategory
+      };
+    }
+    if (currentCategory.subcategories && currentCategory.subcategories.length > 0) {
+      const updatedSubcategories = currentCategory.subcategories.map((subcategory) =>
+        updateCategoryWithKey(subcategory, editedCategory)
+      );
+      return {
+        ...currentCategory,
+        subcategories: updatedSubcategories,
+      };
+    }
+    return currentCategory;
+  };
+
+  const handleChangeCategory = (editedCategory) => {
+    const updatedCategories = categories.map((category) =>
+      updateCategoryWithKey(category, editedCategory)
+    );
+    onChange(updatedCategories);
+  };
+
+  const handleReturnToParent = () => {
+    // Calculate the new path without the last element
+    const newPath = path.slice(0, -1);
+    // Use the router.push method to navigate to the new location
+    router.push(`/categories?path=${newPath.join(',')}`);
+  };
+
+  //Returns the updated categories list given the categories list, the indices path list and the updated categories list
+  const modifyCategories = (array, indices, updatedSubCat) => {
+    if (!indices.length) {
+      array = updatedSubCat;
+    } else {
+      const currentIndex = indices[0];
+      array[currentIndex].subcategories = modifyCategories(
+        array[currentIndex].subcategories,
+        indices.slice(1),
+        updatedSubCat
+      );
+    }
+    return array;
+  }
+
+  useEffect(() => {
+    if (path.length > 0) {
+      const categoryResult = getCategoryByIndexes(categories, path);
+      setCategory(categoryResult);
+      setCategoriesOfPath(categoryResult ? categoryResult.subcategories : categories);
+    } else {
+      setCategory(null);
+      setCategoriesOfPath(categories);
+    }
+  }, [categories, path]);
+
+  return (
+    <div>
+      <Card w="100%" mb="20px">
+        <Flex
+          align="center"
+          direction={{ base: 'column', md: 'row' }}
+          justify="space-between"
+        >
+          <Text fontSize="lg" fontWeight={'700'}>
+            {
+              isOnSearch
+                ? 'Search result'
+                : path.length > 0
+                  ? 'Editing subcategories of:' + category?.CategoryId
+                  : 'Main Categories'
+            }
+          </Text>
+          <Flex>
+            {
+              path.length > 0 && !isOnSearch ?
+                <Button
+                  py="20px"
+                  px="16px"
+                  fontSize="sm"
+                  borderRadius="45px"
+                  ms=""
+                  mt={{ base: '20px', md: '0px' }}
+                  w={{ base: '100%', md: '210px' }}
+                  h="54px"
+                  onClick={handleReturnToParent}
+                >
+                  Return to parent
+                </Button> : null
+            }
+            <Button
+              variant="primary"
+              py="20px"
+              px="16px"
+              fontSize="sm"
+              borderRadius="45px"
+              ms="auto"
+              mt={{ base: '20px', md: '0px' }}
+              w={{ base: '100%', md: '210px' }}
+              h="54px"
+              onClick={onSubmit}
+              ml="10px"
+            >
+              Save changes
+            </Button>
+          </Flex>
+        </Flex>
+      </Card>
+      <Flex w="100%" mb="20px" direction={{ base: 'column', md: 'row' }}>
+        <SearchBar value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+        {
+          isOnSearch
+            ? null
+            : <Button
+              me={{ base: '10px', md: '20px' }}
+              bg={buttonBg}
+              border="1px solid"
+              color="gray.500"
+              mt={{ base: '20px', md: '0px' }}
+              borderColor={borderColor}
+              borderRadius="12px"
+              minW="44px"
+              h="44px"
+              _placeholder={{ color: 'gray.500' }}
+              _hover={hoverButton}
+              _active={activeButton}
+              _focus={activeButton}
+              title="Add new category"
+              onClick={handleAddCategory}
+            >
+              <Icon color={textColor} as={BiAddToQueue} />
+            </Button>
+        }
+      </Flex>
+      {
+        filteredCategories.length == 0 && categoriesOfPath.length == 0 ? (
+          <Text textAlign="center" mt="4">This category does not have any subcategories yet. <br />You can add one by using the button above.</Text>
+        ) : filteredCategories.length == 0 && isOnSearch ? (
+          <Text textAlign="center" mt="4">There are no categories matching the criteria.</Text>
+        ) : (
+          <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing="20px">
+            {
+              Object.entries(filteredCategories.length == 0 ? categoriesOfPath : filteredCategories)
+                .map(([categoryId, category]) => (
+                  <div key={category.key}>
+                    <CategoriesCard
+                      isOnSearch={isOnSearch}
+                      category={category}
+                      categories={categories}
+                      categoryId={categoryId}
+                      handleRemoveCategory={handleRemoveCategory}
+                      handleChangeCategory={handleChangeCategory}
+                      setSearchQuery={setSearchQuery}
+                    />
+                  </div>
+                ))
+            }
+          </SimpleGrid>
+        )
+      }
+      {
+        isComponentFormOpen ? <ComponentForm
+          category={activeCategory}
+          isOpen={isComponentFormOpen}
+          setOpen={setIsComponentFormOpen}
+          handleRemoveCategory={handleRemoveCategory}
+          handleChangeCategory={handleChangeCategory}
+        />
+          : null
+      }
+    </div>
+  );
+};
+
+export default SubCategoriesPage;

@@ -1,0 +1,24 @@
+
+.line {
+  position: absolute;
+  width: 100%; /* Adjust to your preference */
+  height: 1px; /* Line thickness */
+  background-color: black; /* Line color */
+  transform-origin: 0 0;
+  display: flex;
+  justify-content: center; /* Center the arrow */
+  align-items: center; /* Center the arrow */
+}
+
+.delete-button {
+  position: absolute;
+
+}
+
+.arrow {
+  border-left: 7px solid transparent; /* Adjust arrow size */
+  border-right: 7px solid transparent; /* Adjust arrow size */
+  border-bottom: 14px solid black; /* Arrow color and size */
+  position: absolute;
+  transform: rotate(90deg);
+}
